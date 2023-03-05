@@ -173,7 +173,9 @@ export const generate_moves_from_probes = (
 					type: STACK,
 				});
 			}
-			if (dst.piece?.color !== turn) {
+			if (dst.piece?.color !== turn &&
+				!(dst.tier > 1 && src.piece?.type == FORTRESS)) {
+					// fortress cannot attack stacked pieces
 				moves.push({
 					src: square,
 					dst: pos,
