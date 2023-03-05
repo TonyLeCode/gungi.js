@@ -1,21 +1,6 @@
 import { stockpile_move_gen } from './utils/stockpile_move_gen';
-import {
-	get,
-	get_top,
-	init_stockpile,
-	put,
-	remove,
-	remove_stockpile,
-} from './utils/helper';
-import {
-	Piece,
-	StockPiece,
-	Square,
-	RelaxMove,
-	IsPiece,
-	Move,
-	MoveHistory,
-} from './interfaces/igungi';
+import { get, get_top, init_stockpile, put, remove, remove_stockpile } from './utils/helper';
+import { Piece, StockPiece, Square, RelaxMove, IsPiece, Move, MoveHistory } from './interfaces/igungi';
 import {
 	BLACK,
 	WHITE,
@@ -50,11 +35,7 @@ import {
 	FILE_1,
 	RANK_1,
 } from './utils/constants';
-import {
-	generate_moves_from_probes,
-	isSquareOutOfBounds,
-	single_sqaure_move_gen,
-} from './utils/move_gen';
+import { generate_moves_from_probes, isSquareOutOfBounds, single_sqaure_move_gen } from './utils/move_gen';
 
 var _ = require('lodash');
 
@@ -192,21 +173,13 @@ class Gungi {
 
 		this.get_captured = (color?: 'w' | 'b') => {
 			if (!color) {
-				return [
-					..._.orderBy(
-						this._captured,
-						['piece.color', 'piece.type'],
-						['asc', 'asc']
-					),
-				];
+				return [..._.orderBy(this._captured, ['piece.color', 'piece.type'], ['asc', 'asc'])];
 			}
 
 			return [
-				..._.orderBy(
-					this._captured,
-					['piece.color', 'piece.type'],
-					['asc', 'asc']
-				).filter((x: StockPiece) => x.piece.color == color),
+				..._.orderBy(this._captured, ['piece.color', 'piece.type'], ['asc', 'asc']).filter(
+					(x: StockPiece) => x.piece.color == color,
+				),
 			];
 		};
 
@@ -239,11 +212,7 @@ class Gungi {
 
 			vision.forEach((square) => {
 				var top = get_top(this.board, square.rank + '-' + square.file);
-				if (
-					top !== null &&
-					top.piece?.type === MARSHAL &&
-					top.piece?.color == this.turn
-				) {
+				if (top !== null && top.piece?.type === MARSHAL && top.piece?.color == this.turn) {
 					is_in_check = true;
 				}
 			});
@@ -254,17 +223,12 @@ class Gungi {
 		this.in_checkmate = () => {
 			return (
 				(this.in_check() && this.moves().length == 0) ||
-				this._captured.find(
-					(x) => x.piece.color === this.turn && x.piece.type === MARSHAL
-				) !== undefined
+				this._captured.find((x) => x.piece.color === this.turn && x.piece.type === MARSHAL) !== undefined
 			);
 		};
 
 		this.in_stalemate = () => {
-			return (
-				(!this.in_check() && this.moves().length == 0) ||
-				this._turns_without_placing_or_capturing > 50
-			);
+			return (!this.in_check() && this.moves().length == 0) || this._turns_without_placing_or_capturing > 50;
 		};
 
 		this.game_over = () => {
@@ -281,29 +245,14 @@ class Gungi {
 						var src = get_top(this.board, square);
 						if (src != null && src.piece?.color === this.turn) {
 							var probes = single_sqaure_move_gen(this.board, src, square);
-							moves = moves.concat(
-								generate_moves_from_probes(
-									this.board,
-									probes,
-									src,
-									square,
-									this.turn
-								)
-							);
+							moves = moves.concat(generate_moves_from_probes(this.board, probes, src, square, this.turn));
 						}
 					}
 				}
 			}
 
 			moves = moves.concat(
-				stockpile_move_gen(
-					this.board,
-					this.phase,
-					this.turn,
-					this.stockpile,
-					this._marshal_placed,
-					this._army_size
-				)
+				stockpile_move_gen(this.board, this.phase, this.turn, this.stockpile, this._marshal_placed, this._army_size),
 			);
 
 			var temp_board = JSON.stringify(this.board);
@@ -325,19 +274,16 @@ class Gungi {
 									type: move.src.type,
 									color: move.src.color,
 								},
-								move.dst
+								move.dst,
 							);
 						}
 						break;
 					case ATTACK:
 						if (move.dst) {
-							var piece = remove(this.board, move.dst);
-
-							if (get_top(this.board, move.dst) === null) {
-								if (move.src && typeof move.src === 'string') {
-									var temp = remove(this.board, move.src);
-									put(this.board, temp, move.dst);
-								}
+							if (move.src && typeof move.src === 'string') {
+								var piece = remove(this.board, move.dst);
+								var temp = remove(this.board, move.src);
+								put(this.board, temp, move.dst);
 							}
 						}
 						break;
@@ -384,11 +330,7 @@ class Gungi {
 
 				if (!isSquareOutOfBounds(rank, file)) {
 					return moves.filter(
-						(x) =>
-							x.src !== null &&
-							x.src === options.square &&
-							x.type !== PLACE &&
-							x.type !== READY
+						(x) => x.src !== null && x.src === options.square && x.type !== PLACE && x.type !== READY,
 					);
 				}
 			}
@@ -397,15 +339,10 @@ class Gungi {
 		};
 
 		this.move = (player_move: Move) => {
-			var legal_moves = this.moves().filter(
-				(x) => JSON.stringify(x) === JSON.stringify(player_move)
-			);
+			var legal_moves = this.moves().filter((x) => JSON.stringify(x) === JSON.stringify(player_move));
 			if (legal_moves.length) {
 				var legal_move = legal_moves[0];
-				var source_piece =
-					typeof legal_move.src === 'string'
-						? get_top(this.board, legal_move.src)
-						: null;
+				var source_piece = typeof legal_move.src === 'string' ? get_top(this.board, legal_move.src) : null;
 				var destination_piece = null;
 
 				if (typeof legal_move.dst === 'string') {
@@ -417,11 +354,7 @@ class Gungi {
 
 				switch (legal_move.type) {
 					case MOVEMENT:
-						if (
-							legal_move &&
-							legal_move.dst &&
-							typeof legal_move.src === 'string'
-						) {
+						if (legal_move && legal_move.dst && typeof legal_move.src === 'string') {
 							var piece = remove(this.board, legal_move.src);
 							put(this.board, piece, legal_move.dst);
 							this._turns_without_placing_or_capturing++;
@@ -437,7 +370,7 @@ class Gungi {
 									type: legal_move.src.type,
 									color: legal_move.src.color,
 								},
-								legal_move.dst
+								legal_move.dst,
 							);
 
 							this._turns_without_placing_or_capturing = 0;
@@ -461,9 +394,7 @@ class Gungi {
 							var piece = remove(this.board, legal_move.dst);
 
 							if (piece) {
-								var c = this._captured.filter(
-									(x) => JSON.stringify(x.piece) === JSON.stringify(piece)
-								);
+								var c = this._captured.filter((x) => JSON.stringify(x.piece) === JSON.stringify(piece));
 								if (c.length > 0) {
 									c[0].amount++;
 								} else {
@@ -485,11 +416,7 @@ class Gungi {
 						}
 						break;
 					case STACK:
-						if (
-							legal_move &&
-							legal_move.dst &&
-							typeof legal_move.src === 'string'
-						) {
+						if (legal_move && legal_move.dst && typeof legal_move.src === 'string') {
 							var piece = remove(this.board, legal_move.src);
 							put(this.board, piece, legal_move.dst);
 							this._turns_without_placing_or_capturing++;
@@ -549,8 +476,7 @@ class Gungi {
 		};
 
 		this.ascii = () => {
-			var s =
-				'     +--------------------------------------------------------+\n';
+			var s = '     +--------------------------------------------------------+\n';
 			s += '     |                                                        |\n';
 			for (let i = 9; i > 0; i--) {
 				s += ` ｒ${i} |  `;
@@ -580,8 +506,7 @@ class Gungi {
 					}
 				}
 				s += '|\n';
-				s +=
-					'     |                                                        |\n';
+				s += '     |                                                        |\n';
 			}
 			s += '     +--------------------------------------------------------+\n';
 			s += '        ｆ１  ｆ２  ｆ３  ｆ４  ｆ５  ｆ６  ｆ７  ｆ８  ｆ９';
